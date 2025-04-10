@@ -10,7 +10,6 @@ public class Coin {
     private int yearOfMinting;
     private Date acquireDate;
 
-
     public Coin() {
         
     }
@@ -70,5 +69,17 @@ public class Coin {
 
     public void setAcquireDate(Date acquireDate) {
         this.acquireDate = acquireDate;
+    }
+
+    @Override
+    public String toString() {
+        return "Coin{" +
+                "coinId=" + coinId +
+                ", country='" + country + '\'' +
+                ", denomination=" + denomination +
+                ", currentValue=" + currentValue +
+                ", yearOfMinting=" + yearOfMinting +
+                ", acquireDate=" + acquireDate +
+                '}';
     }
 }

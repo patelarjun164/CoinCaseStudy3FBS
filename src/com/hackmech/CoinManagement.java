@@ -1,13 +1,13 @@
 package com.hackmech;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Scanner;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CoinManagement {
 
     static Connection con;
+    private List<Coin> coins = new ArrayList<>();
 
     static {
         try {
@@ -17,22 +17,91 @@ public class CoinManagement {
         }
     }
 
-    public void addCoin(Coin coin) throws SQLException {
+    public void loadFromDatabase() {
+        coins.clear();
+        String sql = "SELECT * FROM coins";
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
-        String insertQuery = "insert into coins (coinid ,country, denomination, currentvalue, yearofminting, acquiredate) values (?,?,?,?,?,?)";
+            while (rs.next()) {
+                coins.add(new Coin(
+                        rs.getInt("coinid"),
+                        rs.getString("country"),
+                        rs.getInt("denomination"),
+                        rs.getDouble("currentvalue"),
+                        rs.getInt("yearofminting"),
+                        rs.getDate("acquiredate")
+                ));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean addCoin(Coin coin) throws SQLException {
+
+        String insertQuery = "insert into coins (country, denomination, currentvalue, yearofminting, acquiredate) values (?,?,?,?,?)";
         PreparedStatement ps = con.prepareStatement(insertQuery);
-        ps.setInt(1, coin.getcoinId());
-        ps.setString(2, coin.getCountry());
-        ps.setInt(3, coin.getDenomination());
-        ps.setDouble(4, coin.getCurrentValue());
-        ps.setInt(5, coin.getYearOfMinting());
-        ps.setDate(6,coin.getAcquireDate());
+//        ps.setInt(1, coin.getcoinId());
+        ps.setString(1, coin.getCountry());
+        ps.setInt(2, coin.getDenomination());
+        ps.setDouble(3, coin.getCurrentValue());
+        ps.setInt(4, coin.getYearOfMinting());
+        ps.setDate(5,coin.getAcquireDate());
 
         int res = ps.executeUpdate();
-        if(res==1){
-            System.out.println("Coin added Successfully");
-        } else {
-            System.out.println("Error in adding coin, Pls enter detail correctly");
+        return res == 1;
+    }
+
+    public List<Coin> searchByCountry(String countryName){
+        try {
+            List<Coin> resList = new ArrayList<>();
+            String query = "SELECT * FROM coins WHERE LOWER(country) = ?";
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setString(1, countryName.toLowerCase());
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()){
+                resList.add(new Coin(
+                        rs.getInt("coinid"),
+                        rs.getString("country"),
+                        rs.getInt("denomination"),
+                        rs.getDouble("currentvalue"),
+                        rs.getInt("yearofminting"),
+                        rs.getDate("acquiredate")
+                ));
+            }
+
+            return resList;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Coin> searchByYearOfMinting(int year){
+        try {
+            List<Coin> resList = new ArrayList<>();
+            String query = "SELECT * FROM coins WHERE yearofminting = ?";
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setInt(1, year);
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()){
+                resList.add(new Coin(
+                        rs.getInt("coinid"),
+                        rs.getString("country"),
+                        rs.getInt("denomination"),
+                        rs.getDouble("currentvalue"),
+                        rs.getInt("yearofminting"),
+                        rs.getDate("acquiredate")
+                ));
+            }
+
+            return resList;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
