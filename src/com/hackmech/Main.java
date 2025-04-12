@@ -17,7 +17,9 @@ public class Main {
             System.out.println("\n==== Coin Collection Menu ====");
             System.out.println("1. Add Coin");
             System.out.println("2. Search");
-            System.out.println("3. Exit");
+            System.out.println("3. Update Coin");
+            System.out.println("4. Remove Coin");
+            System.out.println("5. Exit");
             System.out.print("Enter your choice: ");
             int choice = sc.nextInt();
             sc.nextLine();  // consume newline
@@ -144,6 +146,18 @@ public class Main {
                 }
 
                 case 3:
+                    System.out.println("Enter id you want to delete");
+                    int coinId = sc.nextInt();
+                    cm.removeCoin(coinId);
+
+                case 4:
+                    System.out.println("Enter id you want to update");
+                    int coinId1 = sc.nextInt();
+                    System.out.println("Enter new currentValue amount");
+                    int currValue1 = sc.nextInt();
+                    cm.updateCoin(coinId1, currValue1);
+
+                case 5:
                     System.out.println("Exiting program.");
                     sc.close();
                     return;

@@ -20,7 +20,6 @@ public class CoinManagement {
     }
 
     public void loadFromDatabase() {
-        coins.clear();
         String sql = "SELECT * FROM coins";
 
         try (Statement stmt = con.createStatement();
@@ -53,13 +52,13 @@ public class CoinManagement {
         ps.setInt(2, coin.getDenomination());
         ps.setDouble(3, coin.getCurrentValue());
         ps.setInt(4, coin.getYearOfMinting());
-        ps.setDate(5,coin.getAcquireDate());
+        ps.setDate(5, coin.getAcquireDate());
 
         int res = ps.executeUpdate();
         return res == 1;
     }
 
-    public List<Coin> searchByCountry(String countryName){
+    public List<Coin> searchByCountry(String countryName) {
         try {
             List<Coin> resList = new ArrayList<>();
             String query = "SELECT * FROM coins WHERE LOWER(country) = ?";
@@ -67,7 +66,7 @@ public class CoinManagement {
             ps.setString(1, countryName.toLowerCase());
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 resList.add(new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
@@ -84,7 +83,7 @@ public class CoinManagement {
         }
     }
 
-    public List<Coin> searchByYearOfMinting(int year){
+    public List<Coin> searchByYearOfMinting(int year) {
         try {
             List<Coin> resList = new ArrayList<>();
             String query = "SELECT * FROM coins WHERE yearofminting = ?";
@@ -92,7 +91,7 @@ public class CoinManagement {
             ps.setInt(1, year);
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 resList.add(new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
@@ -109,29 +108,32 @@ public class CoinManagement {
         }
     }
 
-    public List<Coin> searchByCurrentValue(){
+    public List<Coin> searchByCurrentValue() {
 
         try {
             List<Coin> resList = new ArrayList<>();
-//            String query = "SELECT * FROM coins WHERE currentvalue = ?";
-//            PreparedStatement ps = con.prepareStatement(query);
-//            ps.setDouble(1, currValue);
-//            ResultSet rs = ps.executeQuery();
-//
-//            while(rs.next()){
-//                resList.add(new Coin(
-//                        rs.getInt("coinid"),
-//                        rs.getString("country"),
-//                        rs.getInt("denomination"),
-//                        rs.getDouble("currentvalue"),
-//                        rs.getInt("yearofminting"),
-//                        rs.getDate("acquiredate")
-//                ));
-//            }
+            String query = "SELECT * FROM coins order by currentvalue";
+            PreparedStatement ps = con.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
 
-            Collections.sort(coins, Comparator.comparingDouble(Coin::getCurrentValue));
+            while (rs.next()) {
+                resList.add(new Coin(
+                        rs.getInt("coinid"),
+                        rs.getString("country"),
+                        rs.getInt("denomination"),
+                        rs.getDouble("currentvalue"),
+                        rs.getInt("yearofminting"),
+                        rs.getDate("acquiredate")
+                ));
+            }
 
-            return coins;
+//            List<int> ids = (2,5,1,4,9);
+//            Collections.sort(ids);
+//            (1,2,4,5,9)
+
+//            Collections.sort(coins, Comparator.comparingDouble(Coin::getCurrentValue));
+
+            return resList;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -147,7 +149,7 @@ public class CoinManagement {
             ps.setInt(2, denomination);
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 resList.add(new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
@@ -181,7 +183,7 @@ public class CoinManagement {
             ps.setInt(2, year);
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 resList.add(new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
@@ -207,15 +209,7 @@ public class CoinManagement {
 
     // iii. Country + Denomination + Year of Minting
     public List<Coin> searchByCountryDenominationYear(String country, int denomination, int year) {
-//        List<Coin> result = new ArrayList<>();
-//        for (Coin c : coins) {
-//            if (c.getCountry().equalsIgnoreCase(country)
-//                    && c.getDenomination() == denomination
-//                    && c.getYearOfMinting() == year) {
-//                result.add(c);
-//            }
-//        }
-//        return result;
+
         try {
             List<Coin> resList = new ArrayList<>();
             String query = "SELECT * FROM coins WHERE LOWER(country) = ? and denomination = ? and yearofminting=?";
@@ -225,7 +219,7 @@ public class CoinManagement {
             ps.setInt(3, year);
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 resList.add(new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
@@ -244,14 +238,7 @@ public class CoinManagement {
 
     // iv. Acquired Date + Country
     public List<Coin> searchByAcquireDateAndCountry(Date acquireDate, String country) {
-//        List<Coin> result = new ArrayList<>();
-//        for (Coin c : coins) {
-//            if (c.getAcquireDate().equals(acquireDate)
-//                    && c.getCountry().equalsIgnoreCase(country)) {
-//                result.add(c);
-//            }
-//        }
-//        return result;
+
         try {
             List<Coin> resList = new ArrayList<>();
             String query = "SELECT * FROM coins WHERE LOWER(country) = ? and acquiredate = ?";
@@ -260,7 +247,7 @@ public class CoinManagement {
             ps.setDate(2, acquireDate);
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 resList.add(new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
@@ -278,13 +265,55 @@ public class CoinManagement {
     }
 
 
-    public void updateCoin(Coin coin){
+    public void updateCoin(int coinId, double currVal) {
+        //check weather coin is available with that coinID in db
+        //if yes then we will update its currValue to new one
+        //if no then will throw an error
+        try {
+            String selectQuery = "select * from coins where coinid = ?";
+            PreparedStatement ps = con.prepareStatement(selectQuery);
+            ps.setInt(1, coinId);
+            ResultSet rs = ps.executeQuery();
 
+//            rs ---> 0
+//rs.next() -->>> 1  //if record exits
+            if (rs.next()) {
+                String updateQuery = "UPDATE coins SET currentvalue = ? where coinid = ?";
+
+                PreparedStatement ps1 = con.prepareStatement(updateQuery);
+                ps1.setDouble(1, currVal);
+                ps1.setInt(2, coinId);
+                int res = ps1.executeUpdate();
+                if (res == 1) {
+                    System.out.println("Coin updated Successfully");
+                } else {
+                    System.out.println("Error in updating coin, Pls enter detail correctly");
+                }
+            }
+            else {
+                System.out.println("Coin id not found in database");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    public void removeCoin(Coin coin){
+    public void removeCoin(int coinid) {
 
+        String insertQuery = "DELETE FROM coin where coinid = ?";
+        PreparedStatement ps = null;
+        try {
+            ps = con.prepareStatement(insertQuery);
+
+            ps.setInt(1, coinid);
+            int res = ps.executeUpdate();
+            if (res == 1) {
+                System.out.println("Coin updated Successfully");
+            } else {
+                System.out.println("Error in updating coin, Pls enter detail correctly");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-
 }
