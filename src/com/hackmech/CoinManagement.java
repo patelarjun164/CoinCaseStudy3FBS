@@ -8,45 +8,47 @@ import java.util.List;
 
 public class CoinManagement {
 
-    static Connection con;
+    private Connection con;
     private List<Coin> coins = new ArrayList<>();
 
-    static {
+    public CoinManagement() {
         try {
-            con = Connectivity.getConnection();
+            this.con = Connectivity.getConnection();
         } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("Error while connecting to DB: " + e.getMessage());
         }
     }
 
     public void loadFromDatabase() {
         coins.clear();
         String sql = "SELECT * FROM coins";
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                coins.add(new Coin(
+                Coin coin = new Coin(
                         rs.getInt("coinid"),
                         rs.getString("country"),
                         rs.getInt("denomination"),
                         rs.getDouble("currentvalue"),
                         rs.getInt("yearofminting"),
                         rs.getDate("acquiredate")
-                ));
+                );
+                coins.add(coin);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error loading coins from database: " + e.getMessage());
+            // You can log it or throw a custom exception if needed
         }
     }
+
 
     public boolean addCoin(Coin coin) throws SQLException {
 
         String insertQuery = "insert into coins (country, denomination, currentvalue, yearofminting, acquiredate) values (?,?,?,?,?)";
         PreparedStatement ps = con.prepareStatement(insertQuery);
-//        ps.setInt(1, coin.getcoinId());
         ps.setString(1, coin.getCountry());
         ps.setInt(2, coin.getDenomination());
         ps.setDouble(3, coin.getCurrentValue());
