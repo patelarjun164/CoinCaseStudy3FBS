@@ -7,6 +7,52 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+    // Method to generate and verify OTP
+
+    public static boolean verifyOtp(Scanner sc, String msg) {
+        // Generate 4-digit OTP
+        int otp = (int) (Math.random() * 9000) + 1000;
+//        System.out.println("Generated OTP: " + otp);
+
+        //send otp sms
+        String otpMessage = "🔐 Your OTP for coin " + msg + ": " + otp + ". It is valid for 1 minutes. Do NOT share this OTP with anyone.";
+        SMSSender.sendSms("+919081884526", otpMessage);
+
+        // Get current system time
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + 60000;  // 2 minutes = 120000 ms
+
+        // Start a loop to ask for OTP
+        while (System.currentTimeMillis() < endTime) {
+            long remainingTime = endTime - System.currentTimeMillis();
+            long remainingSeconds = remainingTime / 1000;
+
+            // Show remaining time in minutes and seconds
+            System.out.printf("Remaining time: %02d:%02d\n", remainingSeconds / 60, remainingSeconds % 60);
+            System.out.print("Enter the OTP to confirm deletion: ");
+
+            int enteredOtp = sc.nextInt();
+            sc.nextLine();
+
+            // If OTP matches, return true
+            if (enteredOtp == otp) {
+                return true;  // OTP is correct
+            }
+
+            // Delay for 1 second before allowing another attempt
+//            try {
+//                Thread.sleep(1000);  // Sleep for 1 second to avoid spamming the console
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+        }
+
+        // 2 min Timeout reached
+        System.out.println("❌ Time expired. OTP has expired.");
+        return false;  // Time expired
+    }
+
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         CoinManagement cm = new CoinManagement();
@@ -157,6 +203,40 @@ public class Main {
                             System.out.print("Enter new current value: ");
                             double currValue1 = Double.parseDouble(sc.nextLine());
                             cm.updateCoin(coinId1, currValue1);
+                            //  Call the verifyOtp method
+                            if (verifyOtp(sc, "updation")) {
+                                // If OTP is correct, remove coin
+                                Coin coin = cm.updateCoin(coinId1, currValue1);
+                                String message1 = String.format(
+                                        """
+                                                Coin Updated Successfully!
+                                                -----------------------------
+                                                ID: %d
+                                                Current Value: ₹%.2f ---> ₹%.2f
+                                                Country: %s
+                                                Denomination: %d
+                                                Year of Minting: %d
+                                                Acquire Date: %s
+                                                -----------------------------""",
+                                        coin.getcoinId(),
+                                        coin.getCurrentValue(),
+                                        currValue1,
+                                        coin.getCountry(),
+                                        coin.getDenomination(),
+                                        coin.getYearOfMinting(),
+                                        coin.getAcquireDate().toString()
+                                );
+
+                                if (coin != null) {
+                                    System.out.println("✅ Coin updated successfully");
+                                    SMSSender.sendSms("+919081884526", message1);
+                                    System.out.println(message1);
+                                } else {
+                                    System.out.println("❌ Coin ID not found in databases");
+                                }
+                            } else {
+                                System.out.println("❌ Invalid OTP. Coin updation cancelled.");
+                            }
                         } catch (Exception e) {
                             System.out.println("Invalid input: " + e.getMessage());
                         }
@@ -164,13 +244,48 @@ public class Main {
 
                     case 4:
                         try {
-                            System.out.print("Enter coin ID to delete: ");
-                            int coinId = Integer.parseInt(sc.nextLine());
-                            cm.removeCoin(coinId);
+                            System.out.print("Enter ID of the coin you want to delete: ");
+                            int coinId = sc.nextInt();
+                            sc.nextLine(); // consume newline
+
+                            //  Call the verifyOtp method
+                            if (verifyOtp(sc, "deletion")) {
+                                // If OTP is correct, remove coin
+                                Coin removedCoin = cm.removeCoin(coinId);
+                                String message = String.format(
+                                        """
+                                                Coin Deleted Successfully!
+                                                ----------------------------------
+                                                ID: %d
+                                                Country: %s
+                                                Denomination: %d
+                                                Current Value: %.2f
+                                                Year of Minting: %d
+                                                Acquire Date: %s
+                                                ----------------------------------""",
+                                        removedCoin.getcoinId(),
+                                        removedCoin.getCountry(),
+                                        removedCoin.getDenomination(),
+                                        removedCoin.getCurrentValue(),
+                                        removedCoin.getYearOfMinting(),
+                                        removedCoin.getAcquireDate().toString()
+                                );
+
+                                if (removedCoin != null) {
+                                    System.out.println("✅ Coin removed successfully.");
+                                    SMSSender.sendSms("+919081884526", message);
+                                    System.out.println(message);
+                                } else {
+                                    System.out.println("❌ Coin not found or couldn't be removed.");
+                                }
+                            } else {
+                                System.out.println("❌ Invalid OTP. Coin deletion cancelled.");
+                            }
+                            break;
                         } catch (Exception e) {
-                            System.out.println("Invalid input: " + e.getMessage());
+                            System.out.println("Error: " + e.getMessage());
                         }
-                        break;
+
 
                     case 5:
                         System.out.println("Exiting program.");

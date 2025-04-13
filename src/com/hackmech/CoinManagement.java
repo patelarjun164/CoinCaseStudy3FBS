@@ -43,7 +43,7 @@ public class CoinManagement {
     public boolean addCoin(Coin coin) throws SQLException {
 
         String insertQuery = "insert into coins (country, denomination, currentvalue, yearofminting, acquiredate) values (?,?,?,?,?)";
-        PreparedStatement ps = con.prepareStatement(insertQuery);
+        PreparedStatement ps = con.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
         ps.setString(1, coin.getCountry());
         ps.setInt(2, coin.getDenomination());
         ps.setDouble(3, coin.getCurrentValue());
@@ -51,6 +51,29 @@ public class CoinManagement {
         ps.setDate(5, coin.getAcquireDate());
 
         int res = ps.executeUpdate();
+        ResultSet generatedKeys = ps.getGeneratedKeys();
+        generatedKeys.next();
+        int generatedCoinID = generatedKeys.getInt(1);
+
+
+        String msg = String.format(
+                "New Coin Added to your collection!\n" +
+                        "Coin ID: %d\n" +
+                        "Country: %s\n" +
+                        "Denomination: ₹%d\n" +
+                        "Current Value: ₹%.2f\n" +
+                        "Year of Minting: %d\n" +
+                        "Acquired On: %s",
+                generatedCoinID,
+                coin.getCountry(),
+                coin.getDenomination(),
+                coin.getCurrentValue(),
+                coin.getYearOfMinting(),
+                coin.getAcquireDate().toString()
+        );
+        if (res == 1) {
+            SMSSender.sendSms("+919081884526", msg);
+        }
         return res == 1;
     }
 
@@ -117,34 +140,72 @@ public class CoinManagement {
         return executeSearchQuery("SELECT * FROM coins WHERE acquiredate = ? and country = ?", acquireDate, country);
     }
 
-    public void updateCoin(int coinId, double currVal) {
-        try (PreparedStatement ps = con.prepareStatement("UPDATE coins SET currentvalue = ? WHERE coinid = ?")) {
+    public Coin updateCoin(int coinId, double currVal) {
+        String selectQuery = "SELECT * from coins WHERE coinid = ?";
+
+        try (   PreparedStatement selectStmt = con.prepareStatement(selectQuery);
+                PreparedStatement ps = con.prepareStatement("UPDATE coins SET currentvalue = ? WHERE coinid = ?")) {
+            // Fetch the coin
+            selectStmt.setInt(1, coinId);
+            ResultSet rs = selectStmt.executeQuery();
+
+            if (!rs.next()) {
+                System.out.println("❌ No coin found with ID: " + coinId);
+                return null;
+            }
+
+            // Extract coin details
+            Coin coin = new Coin(
+                    rs.getInt("coinid"),
+                    rs.getString("country"),
+                    rs.getInt("denomination"),
+                    rs.getDouble("currentvalue"),
+                    rs.getInt("yearofminting"),
+                    rs.getDate("acquiredate")
+            );
+
+            //update coin
             ps.setDouble(1, currVal);
             ps.setInt(2, coinId);
-            int rowsUpdated = ps.executeUpdate();
-
-            if (rowsUpdated == 1) {
-                System.out.println("Coin updated successfully");
-            } else {
-                System.out.println("Coin ID not found in database");
-            }
+            ps.executeUpdate();
+            return coin;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+        return null;
     }
 
-    public void removeCoin(int coinId) {
+    public Coin removeCoin(int coinId) {
         String deleteQuery = "DELETE FROM coins WHERE coinid = ?";
+        String selectQuery = "SELECT * from coins WHERE coinid = ?";
 
-        try (PreparedStatement ps = con.prepareStatement(deleteQuery)) {
-            ps.setInt(1, coinId);
-            int rowsDeleted = ps.executeUpdate();
 
-            if (rowsDeleted == 1) {
-                System.out.println("Coin removed successfully");
-            } else {
-                System.out.println("Coin not found or could not be removed");
+        try (PreparedStatement selectStmt = con.prepareStatement(selectQuery);
+             PreparedStatement deleteStmt = con.prepareStatement(deleteQuery)
+        ) {
+            // Fetch the coin
+            selectStmt.setInt(1, coinId);
+            ResultSet rs = selectStmt.executeQuery();
+
+            if (!rs.next()) {
+                System.out.println("❌ No coin found with ID: " + coinId);
+                return null;
             }
+
+            // Extract coin details
+            Coin coin = new Coin(
+                    rs.getInt("coinid"),
+                    rs.getString("country"),
+                    rs.getInt("denomination"),
+                    rs.getDouble("currentvalue"),
+                    rs.getInt("yearofminting"),
+                    rs.getDate("acquiredate")
+            );
+
+            //Delete the coin
+            deleteStmt.setInt(1, coinId);
+            deleteStmt.executeUpdate();
+            return coin;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
