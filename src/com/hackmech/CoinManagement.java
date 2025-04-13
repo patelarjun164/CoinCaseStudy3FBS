@@ -2,8 +2,6 @@ package com.hackmech;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class CoinManagement {
@@ -39,7 +37,6 @@ public class CoinManagement {
 
         } catch (SQLException e) {
             System.err.println("Error loading coins from database: " + e.getMessage());
-            // You can log it or throw a custom exception if needed
         }
     }
 
@@ -112,107 +109,41 @@ public class CoinManagement {
     }
 
     public List<Coin> searchByCountryDenominationYear(String country, int denomination, int year) {
-
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins WHERE LOWER(country) = ? and denomination = ? and yearofminting=?";
-            PreparedStatement ps = con.prepareStatement(query);
-            ps.setString(1, country.toLowerCase());
-            ps.setInt(2, denomination);
-            ps.setInt(3, year);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
-            }
-
-            return resList;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return executeSearchQuery("SELECT * FROM coins WHERE LOWER(country) = ? and denomination = ? and yearofminting=?", country, denomination, year);
     }
 
     // iv. Acquired Date + Country
     public List<Coin> searchByAcquireDateAndCountry(Date acquireDate, String country) {
-
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins WHERE LOWER(country) = ? and acquiredate = ?";
-            PreparedStatement ps = con.prepareStatement(query);
-            ps.setString(1, country.toLowerCase());
-            ps.setDate(2, acquireDate);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
-            }
-
-            return resList;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return executeSearchQuery("SELECT * FROM coins WHERE country = ? and denomination = ? and yearofminting=?", acquireDate, country);
     }
 
-
     public void updateCoin(int coinId, double currVal) {
-        //check weather coin is available with that coinID in db
-        //if yes then we will update its currValue to new one
-        //if no then will throw an error
-        try {
-            String selectQuery = "select * from coins where coinid = ?";
-            PreparedStatement ps = con.prepareStatement(selectQuery);
-            ps.setInt(1, coinId);
-            ResultSet rs = ps.executeQuery();
+        try (PreparedStatement ps = con.prepareStatement("UPDATE coins SET currentvalue = ? WHERE coinid = ?")) {
+            ps.setDouble(1, currVal);
+            ps.setInt(2, coinId);
+            int rowsUpdated = ps.executeUpdate();
 
-//            rs ---> 0
-//rs.next() -->>> 1  //if record exits
-            if (rs.next()) {
-                String updateQuery = "UPDATE coins SET currentvalue = ? where coinid = ?";
-
-                PreparedStatement ps1 = con.prepareStatement(updateQuery);
-                ps1.setDouble(1, currVal);
-                ps1.setInt(2, coinId);
-                int res = ps1.executeUpdate();
-                if (res == 1) {
-                    System.out.println("Coin updated Successfully");
-                } else {
-                    System.out.println("Error in updating coin, Pls enter detail correctly");
-                }
+            if (rowsUpdated == 1) {
+                System.out.println("Coin updated successfully");
             } else {
-                System.out.println("Coin id not found in database");
+                System.out.println("Coin ID not found in database");
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public void removeCoin(int coinid) {
+    public void removeCoin(int coinId) {
+        String deleteQuery = "DELETE FROM coins WHERE coinid = ?";
 
-        String insertQuery = "DELETE FROM coin where coinid = ?";
-        PreparedStatement ps = null;
-        try {
-            ps = con.prepareStatement(insertQuery);
+        try (PreparedStatement ps = con.prepareStatement(deleteQuery)) {
+            ps.setInt(1, coinId);
+            int rowsDeleted = ps.executeUpdate();
 
-            ps.setInt(1, coinid);
-            int res = ps.executeUpdate();
-            if (res == 1) {
-                System.out.println("Coin updated Successfully");
+            if (rowsDeleted == 1) {
+                System.out.println("Coin removed successfully");
             } else {
-                System.out.println("Error in updating coin, Pls enter detail correctly");
+                System.out.println("Coin not found or could not be removed");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
