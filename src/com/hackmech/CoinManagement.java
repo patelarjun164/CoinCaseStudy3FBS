@@ -58,156 +58,59 @@ public class CoinManagement {
         return res == 1;
     }
 
-    public List<Coin> searchByCountry(String countryName) {
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins WHERE LOWER(country) = ?";
-            PreparedStatement ps = con.prepareStatement(query);
-            ps.setString(1, countryName.toLowerCase());
-            ResultSet rs = ps.executeQuery();
+    private List<Coin> convertResultSetToCoins(ResultSet rs) throws SQLException {
+        List<Coin> resultList = new ArrayList<>();
 
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
+        while (rs.next()) {
+            resultList.add(new Coin(
+                    rs.getInt("coinid"),
+                    rs.getString("country"),
+                    rs.getInt("denomination"),
+                    rs.getDouble("currentvalue"),
+                    rs.getInt("yearofminting"),
+                    rs.getDate("acquiredate")
+            ));
+        }
+        return resultList;
+    }
+
+    private List<Coin> executeSearchQuery(String query, Object... params) {
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            //setting all paramter like setInt, setDouble, setString using generalised method setObject
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
             }
 
-            return resList;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            //execute query and get result
+            try (ResultSet rs = ps.executeQuery()) {
+                return convertResultSetToCoins(rs);
+            }
+        } catch (SQLException se) {
+            System.out.println("Query Failed: " + se.getMessage());
         }
+        return null;
+    }
+
+    public List<Coin> searchByCountry(String countryName) {
+        return executeSearchQuery("SELECT * FROM coins WHERE country = ?", countryName);
     }
 
     public List<Coin> searchByYearOfMinting(int year) {
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins WHERE yearofminting = ?";
-            PreparedStatement ps = con.prepareStatement(query);
-            ps.setInt(1, year);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
-            }
-
-            return resList;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return executeSearchQuery("SELECT * FROM coins WHERE yearofminting = ?", year);
     }
 
     public List<Coin> searchByCurrentValue() {
-
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins order by currentvalue";
-            PreparedStatement ps = con.prepareStatement(query);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
-            }
-
-//            List<int> ids = (2,5,1,4,9);
-//            Collections.sort(ids);
-//            (1,2,4,5,9)
-
-//            Collections.sort(coins, Comparator.comparingDouble(Coin::getCurrentValue));
-
-            return resList;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return executeSearchQuery("SELECT * FROM coins order by currentvalue");
     }
 
-    // i. Country + Denomination
     public List<Coin> searchByCountryAndDenomination(String country, int denomination) {
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins WHERE LOWER(country) = ? and denomination = ?";
-            PreparedStatement ps = con.prepareStatement(query);
-            ps.setString(1, country.toLowerCase());
-            ps.setInt(2, denomination);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
-            }
-
-            return resList;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-//        List<Coin> result = new ArrayList<>();
-//        for (Coin c : coins) {
-//            if (c.getCountry().equalsIgnoreCase(country) && c.getDenomination() == denomination) {
-//                result.add(c);
-//            }
-//        }
-//        return result;
+        return executeSearchQuery("SELECT * FROM coins WHERE country = ? and denomination = ?", country, denomination);
     }
 
-    // ii. Country + Year of Minting
     public List<Coin> searchByCountryAndYear(String country, int year) {
-        try {
-            List<Coin> resList = new ArrayList<>();
-            String query = "SELECT * FROM coins WHERE LOWER(country) = ? and yearofminting = ?";
-            PreparedStatement ps = con.prepareStatement(query);
-            ps.setString(1, country.toLowerCase());
-            ps.setInt(2, year);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                resList.add(new Coin(
-                        rs.getInt("coinid"),
-                        rs.getString("country"),
-                        rs.getInt("denomination"),
-                        rs.getDouble("currentvalue"),
-                        rs.getInt("yearofminting"),
-                        rs.getDate("acquiredate")
-                ));
-            }
-
-            return resList;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-//        List<Coin> result = new ArrayList<>();
-//        for (Coin c : coins) {
-//            if (c.getCountry().equalsIgnoreCase(country) && c.getYearOfMinting() == year) {
-//                result.add(c);
-//            }
-//        }
-//        return result;
+        return executeSearchQuery("SELECT * FROM coins WHERE country= ? and yearofminting = ?", country, year);
     }
 
-    // iii. Country + Denomination + Year of Minting
     public List<Coin> searchByCountryDenominationYear(String country, int denomination, int year) {
 
         try {
@@ -289,8 +192,7 @@ public class CoinManagement {
                 } else {
                     System.out.println("Error in updating coin, Pls enter detail correctly");
                 }
-            }
-            else {
+            } else {
                 System.out.println("Coin id not found in database");
             }
         } catch (SQLException e) {
