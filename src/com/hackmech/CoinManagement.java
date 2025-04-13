@@ -95,8 +95,9 @@ public class CoinManagement {
         return executeSearchQuery("SELECT * FROM coins WHERE yearofminting = ?", year);
     }
 
-    public List<Coin> sortByCurrentValue() {
-        return executeSearchQuery("SELECT * FROM coins order by currentvalue");
+    public List<Coin> searchBYCurrentValue(int currentValue) {
+
+        return executeSearchQuery("SELECT * FROM coins where currentvalue = ?", currentValue);
     }
 
     public List<Coin> searchByCountryAndDenomination(String country, int denomination) {
@@ -113,7 +114,7 @@ public class CoinManagement {
 
     // iv. Acquired Date + Country
     public List<Coin> searchByAcquireDateAndCountry(Date acquireDate, String country) {
-        return executeSearchQuery("SELECT * FROM coins WHERE country = ? and denomination = ? and yearofminting=?", acquireDate, country);
+        return executeSearchQuery("SELECT * FROM coins WHERE acquiredate = ? and country = ?", acquireDate, country);
     }
 
     public void updateCoin(int coinId, double currVal) {
