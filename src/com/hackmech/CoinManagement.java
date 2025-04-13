@@ -40,7 +40,6 @@ public class CoinManagement {
         }
     }
 
-
     public boolean addCoin(Coin coin) throws SQLException {
 
         String insertQuery = "insert into coins (country, denomination, currentvalue, yearofminting, acquiredate) values (?,?,?,?,?)";
@@ -78,7 +77,7 @@ public class CoinManagement {
                 ps.setObject(i + 1, params[i]);
             }
 
-            //execute query and get result
+            //execute query and get result, add every coin object in coin's list
             try (ResultSet rs = ps.executeQuery()) {
                 return convertResultSetToCoins(rs);
             }
@@ -96,7 +95,7 @@ public class CoinManagement {
         return executeSearchQuery("SELECT * FROM coins WHERE yearofminting = ?", year);
     }
 
-    public List<Coin> searchByCurrentValue() {
+    public List<Coin> sortByCurrentValue() {
         return executeSearchQuery("SELECT * FROM coins order by currentvalue");
     }
 

@@ -88,8 +88,8 @@ public class Main {
                                 break;
 
                             case 3:
-                                List<Coin> res3 = cm.searchByCurrentValue();
-                                res3.forEach(c -> System.out.println(c.getcoinId() + " " + c.getCountry() + " " + c.getDenomination()));
+                                List<Coin> res3 = cm.sortByCurrentValue();
+                                res3.forEach(System.out::println);
                                 break;
 
                             case 4:
