@@ -16,11 +16,12 @@ public class Main {
 
         //send otp sms
         String otpMessage = "🔐 Your OTP for coin " + msg + ": " + otp + ". It is valid for 1 minutes. Do NOT share this OTP with anyone.";
-        SMSSender.sendSms("+919081884526", otpMessage);
+//        SMSSender.sendSms("+919081884526", otpMessage);
 
+        System.out.println("otp :" + otp);
         // Get current system time
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + 60000;  // 2 minutes = 120000 ms
+        long endTime = startTime + 60000;  // 1 minutes = 60000 ms
 
         // Start a loop to ask for OTP
         while (System.currentTimeMillis() < endTime) {
@@ -38,16 +39,9 @@ public class Main {
             if (enteredOtp == otp) {
                 return true;  // OTP is correct
             }
-
-            // Delay for 1 second before allowing another attempt
-//            try {
-//                Thread.sleep(1000);  // Sleep for 1 second to avoid spamming the console
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
         }
 
-        // 2 min Timeout reached
+        // 1 min Timeout reached
         System.out.println("❌ Time expired. OTP has expired.");
         return false;  // Time expired
     }
@@ -229,7 +223,7 @@ public class Main {
 
                                 if (coin != null) {
                                     System.out.println("✅ Coin updated successfully");
-                                    SMSSender.sendSms("+919081884526", message1);
+//                                    SMSSender.sendSms("+919081884526", message1);
                                     System.out.println(message1);
                                 } else {
                                     System.out.println("❌ Coin ID not found in databases");
@@ -273,7 +267,7 @@ public class Main {
 
                                 if (removedCoin != null) {
                                     System.out.println("✅ Coin removed successfully.");
-                                    SMSSender.sendSms("+919081884526", message);
+//                                    SMSSender.sendSms("+919081884526", message);
                                     System.out.println(message);
                                 } else {
                                     System.out.println("❌ Coin not found or couldn't be removed.");
