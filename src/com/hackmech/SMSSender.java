@@ -8,12 +8,10 @@ import java.lang.reflect.InaccessibleObjectException;
 
 public class SMSSender {
 
-    public static final String ACCOUNT_SID = "";
-    public static final String AUTH_TOKEN = "";
 
     public static void sendSms(String toPhoneNumber, String messageText) {
         try {
-            Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+//            Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
 
             Message message = Message.creator(
                     new PhoneNumber(toPhoneNumber),       // To number
