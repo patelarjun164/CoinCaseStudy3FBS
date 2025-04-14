@@ -7,18 +7,18 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    // Method to generate and verify OTP
 
+    // Method to generate and verify OTP
     public static boolean verifyOtp(Scanner sc, String msg) {
         // Generate 4-digit OTP
         int otp = (int) (Math.random() * 9000) + 1000;
 //        System.out.println("Generated OTP: " + otp);
 
         //send otp sms
-        String otpMessage = "🔐 Your OTP for coin " + msg + ": " + otp + ". It is valid for 1 minutes. Do NOT share this OTP with anyone.";
-//        SMSSender.sendSms("+919081884526", otpMessage);
+        String otpMessage = "Your OTP for coin " + msg + ": " + otp + ". It is valid for 1 minutes. Do NOT share this OTP with anyone.";
+        SMSSender.sendSms("+919081884526", otpMessage);
 
-        System.out.println("otp :" + otp);
+//        System.out.println("otp :" + otp);
         // Get current system time
         long startTime = System.currentTimeMillis();
         long endTime = startTime + 60000;  // 1 minutes = 60000 ms
@@ -93,8 +93,28 @@ public class Main {
                             Date acquireDate = Date.valueOf(localDate);
 
                             Coin coin = new Coin(0, country, denomination, currentValue, yearOfMinting, acquireDate);
-                            boolean res = cm.addCoin(coin);
-                            System.out.println(res ? "Coin added successfully." : "Error: Could not add coin.");
+                            Coin resultantCoin = cm.addCoin(coin);
+                            String msg = String.format(
+                                    "New Coin Added to your collection!\n" +
+                                            "Coin ID: %d\n" +
+                                            "Country: %s\n" +
+                                            "Denomination: ₹%d\n" +
+                                            "Current Value: ₹%.2f\n" +
+                                            "Year of Minting: %d\n" +
+                                            "Acquired On: %s",
+                                    coin.getcoinId(),
+                                    coin.getCountry(),
+                                    coin.getDenomination(),
+                                    coin.getCurrentValue(),
+                                    coin.getYearOfMinting(),
+                                    coin.getAcquireDate().toString()
+                            );
+                            if (resultantCoin != null) {
+                                System.out.println("Coin added successfully.");
+                                SMSSender.sendSms("+919081884526", msg);
+                            } else {
+                                System.out.println("Error: Could not add coin.");
+                            }
                         } catch (Exception e) {
                             System.out.println("Invalid input: " + e.getMessage());
                         }
@@ -223,7 +243,7 @@ public class Main {
 
                                 if (coin != null) {
                                     System.out.println("✅ Coin updated successfully");
-//                                    SMSSender.sendSms("+919081884526", message1);
+                                    SMSSender.sendSms("+919081884526", message1);
                                     System.out.println(message1);
                                 } else {
                                     System.out.println("❌ Coin ID not found in databases");
@@ -267,7 +287,7 @@ public class Main {
 
                                 if (removedCoin != null) {
                                     System.out.println("✅ Coin removed successfully.");
-//                                    SMSSender.sendSms("+919081884526", message);
+                                    SMSSender.sendSms("+919081884526", message);
                                     System.out.println(message);
                                 } else {
                                     System.out.println("❌ Coin not found or couldn't be removed.");

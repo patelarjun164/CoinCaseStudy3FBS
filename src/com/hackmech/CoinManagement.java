@@ -40,7 +40,7 @@ public class CoinManagement {
         }
     }
 
-    public boolean addCoin(Coin coin) throws SQLException {
+    public Coin addCoin(Coin coin) throws SQLException {
 
         String insertQuery = "insert into coins (country, denomination, currentvalue, yearofminting, acquiredate) values (?,?,?,?,?)";
         PreparedStatement ps = con.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
@@ -54,113 +54,48 @@ public class CoinManagement {
         ResultSet generatedKeys = ps.getGeneratedKeys();
         generatedKeys.next();
         int generatedCoinID = generatedKeys.getInt(1);
+        coin.setcoinId(generatedCoinID);
 
-
-        String msg = String.format(
-                "New Coin Added to your collection!\n" +
-                        "Coin ID: %d\n" +
-                        "Country: %s\n" +
-                        "Denomination: ₹%d\n" +
-                        "Current Value: ₹%.2f\n" +
-                        "Year of Minting: %d\n" +
-                        "Acquired On: %s",
-                generatedCoinID,
-                coin.getCountry(),
-                coin.getDenomination(),
-                coin.getCurrentValue(),
-                coin.getYearOfMinting(),
-                coin.getAcquireDate().toString()
-        );
         if (res == 1) {
-//            SMSSender.sendSms("+919081884526", msg);
             loadFromDatabase();
-            System.out.println(msg);
+            return coin;
         }
-        return res == 1;
+        return null;
     }
 
-//    private List<Coin> convertResultSetToCoins(ResultSet rs) throws SQLException {
-//        List<Coin> resultList = new ArrayList<>();
-//
-//        while (rs.next()) {
-//            resultList.add(new Coin(
-//                    rs.getInt("coinid"),
-//                    rs.getString("country"),
-//                    rs.getInt("denomination"),
-//                    rs.getDouble("currentvalue"),
-//                    rs.getInt("yearofminting"),
-//                    rs.getDate("acquiredate")
-//            ));
-//        }
-//        return resultList;
-//    }
-
-//    private List<Coin> executeSearchQuery(String query, Object ...params) {
-//        try (PreparedStatement ps = con.prepareStatement(query)) {
-//            //setting all paramter like setInt, setDouble, setString using generalised method setObject
-//            for (int i = 0; i < params.length; i++) {
-//                ps.setObject(i + 1, params[i]);
-//            }
-//
-//            //execute query and get result, add every coin object in coin's list
-//            try (ResultSet rs = ps.executeQuery()) {
-//                return convertResultSetToCoins(rs);
-//            }
-//        } catch (SQLException se) {
-//            System.out.println("Query Failed: " + se.getMessage());
-//        }
-//        return null;
-//    }
-
+    //country name
     public List<Coin> searchByCountry(String countryName) {
-//        return executeSearchQuery("SELECT * FROM coins WHERE country = ?", countryName);
-        //need--> aise coin ke object chahiye jiski country name ==india(countyName)
         return coins.stream().filter(coin -> coin.getCountry().equalsIgnoreCase(countryName)).toList();
-//        List<Coin> tempList = new ArrayList<>();z
-//        coins.forEach(coin -> {
-//            if(coin.getCountry().equalsIgnoreCase(countryName)){
-//                tempList.add(coin);
-//            }
-//        });
-//        return tempList;
     }
 
+    //year
     public List<Coin> searchByYearOfMinting(int year) {
-//        return executeSearchQuery("SELECT * FROM coins WHERE yearofminting = ?", year);
-        //change to save SQL code in new branch
         return coins.stream().filter(c -> c.getYearOfMinting() == year).toList();
     }
 
+    //currentValue
     public List<Coin> searchBYCurrentValue(int currentValue) {
-
-//        return executeSearchQuery("SELECT * FROM coins where currentvalue = ?", currentValue);
-//        return coins.stream().filter(coin -> coin.getCountry().equalsIgnoreCase(countryName)).toList();
         return coins.stream().filter(c -> c.getCurrentValue() == currentValue).toList();
-
-//        [c1, c2,c3,c4]
     }
 
+    //country + denomination
     public List<Coin> searchByCountryAndDenomination(String country, int denomination) {
-//        return executeSearchQuery("SELECT * FROM coins WHERE country = ? and denomination = ?", country, denomination);
-        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getDenomination()==denomination).toList();
+        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getDenomination() == denomination).toList();
     }
 
+    //country + year
     public List<Coin> searchByCountryAndYear(String country, int year) {
-//        return executeSearchQuery("SELECT * FROM coins WHERE country= ? and yearofminting = ?", country, year);
-
-        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getYearOfMinting()==year).toList();
+        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getYearOfMinting() == year).toList();
     }
 
+    //Country + denomination + year
     public List<Coin> searchByCountryDenominationYear(String country, int denomination, int year) {
-//        return executeSearchQuery("SELECT * FROM coins WHERE LOWER(country) = ? and denomination = ? and yearofminting=?", country, denomination, year);
-
-        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getDenomination()==denomination && c.getYearOfMinting()==year).toList();
+        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getDenomination() == denomination && c.getYearOfMinting() == year).toList();
     }
 
-    // iv. Acquired Date + Country
+    //Acquired Date + Country
     public List<Coin> searchByAcquireDateAndCountry(Date acquireDate, String country) {
-//        return executeSearchQuery("SELECT * FROM coins WHERE acquiredate = ? and country = ?", acquireDate, country);
-        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getAcquireDate()==acquireDate).toList();
+        return coins.stream().filter(c -> c.getCountry().equalsIgnoreCase(country) && c.getAcquireDate() == acquireDate).toList();
     }
 
     public Coin updateCoin(int coinId, double currVal) {
@@ -168,6 +103,7 @@ public class CoinManagement {
 
         try (PreparedStatement selectStmt = con.prepareStatement(selectQuery);
              PreparedStatement ps = con.prepareStatement("UPDATE coins SET currentvalue = ? WHERE coinid = ?")) {
+
             // Fetch the coin
             selectStmt.setInt(1, coinId);
             ResultSet rs = selectStmt.executeQuery();
@@ -191,7 +127,7 @@ public class CoinManagement {
             ps.setDouble(1, currVal);
             ps.setInt(2, coinId);
             int res = ps.executeUpdate();
-            if(res==1){
+            if (res == 1) {
                 loadFromDatabase();
             }
             return coin;
@@ -231,7 +167,7 @@ public class CoinManagement {
             //Delete the coin
             deleteStmt.setInt(1, coinId);
             int res = deleteStmt.executeUpdate();
-            if(res==1){
+            if (res == 1) {
                 loadFromDatabase();
             }
             return coin;

@@ -25,6 +25,7 @@ public class SMSSender {
 
         }
         catch (InaccessibleObjectException iae){
+            //to avoid unwanted exception from dependency using blank sop
             System.out.println("");
         }
         catch (Exception e) {
