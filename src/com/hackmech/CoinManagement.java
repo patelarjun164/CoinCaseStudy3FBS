@@ -122,6 +122,7 @@ public class CoinManagement {
                     rs.getInt("yearofminting"),
                     rs.getDate("acquiredate")
             );
+//            System.out.println(coin);
 
             //update coin
             ps.setDouble(1, currVal);

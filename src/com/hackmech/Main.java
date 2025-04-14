@@ -215,26 +215,26 @@ public class Main {
                             System.out.print("Enter coin ID to update: ");
                             int coinId1 = Integer.parseInt(sc.nextLine());
                             System.out.print("Enter new current value: ");
-                            double currValue1 = Double.parseDouble(sc.nextLine());
-                            cm.updateCoin(coinId1, currValue1);
+                            double currValue = Double.parseDouble(sc.nextLine());
                             //  Call the verifyOtp method
                             if (verifyOtp(sc, "updation")) {
                                 // If OTP is correct, remove coin
-                                Coin coin = cm.updateCoin(coinId1, currValue1);
-                                String message1 = String.format(
+                                Coin coin = cm.updateCoin(coinId1, currValue);
+                                String message = String.format(
                                         """
                                                 Coin Updated Successfully!
-                                                -----------------------------
+                                                ----------------------------------
                                                 ID: %d
-                                                Current Value: ₹%.2f ---> ₹%.2f
+                                                New Current Value: %.2f
+                                                Old Current Value: %.2f
                                                 Country: %s
                                                 Denomination: %d
                                                 Year of Minting: %d
                                                 Acquire Date: %s
-                                                -----------------------------""",
+                                                ----------------------------------""",
                                         coin.getcoinId(),
+                                        currValue,
                                         coin.getCurrentValue(),
-                                        currValue1,
                                         coin.getCountry(),
                                         coin.getDenomination(),
                                         coin.getYearOfMinting(),
@@ -243,8 +243,8 @@ public class Main {
 
                                 if (coin != null) {
                                     System.out.println("✅ Coin updated successfully");
-                                    SMSSender.sendSms("+919081884526", message1);
-                                    System.out.println(message1);
+                                    SMSSender.sendSms("+919081884526", message);
+                                    System.out.println(message);
                                 } else {
                                     System.out.println("❌ Coin ID not found in databases");
                                 }
