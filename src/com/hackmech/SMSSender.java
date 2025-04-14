@@ -8,8 +8,8 @@ import java.lang.reflect.InaccessibleObjectException;
 
 public class SMSSender {
 
-    public static final String ACCOUNT_SID = "AC7f32425a48ec26e592e3c78cc8f3cc71";
-    public static final String AUTH_TOKEN = "9cc67a4ba5f83d612c2f7d2f26cca25d";
+    public static final String ACCOUNT_SID = "";
+    public static final String AUTH_TOKEN = "";
 
     public static void sendSms(String toPhoneNumber, String messageText) {
         try {
