@@ -116,6 +116,7 @@ public class CoinManagement {
 
     public List<Coin> searchByYearOfMinting(int year) {
         return executeSearchQuery("SELECT * FROM coins WHERE yearofminting = ?", year);
+        //change to save SQL code in new branch
     }
 
     public List<Coin> searchBYCurrentValue(int currentValue) {
