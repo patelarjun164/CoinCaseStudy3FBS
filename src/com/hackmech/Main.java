@@ -1,5 +1,6 @@
 package com.hackmech;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.InputMismatchException;
@@ -17,6 +18,11 @@ public class Main {
         //send otp sms
         String otpMessage = "Your OTP for coin " + msg + ": " + otp + ". It is valid for 1 minutes. Do NOT share this OTP with anyone.";
         SMSSender.sendSms("+919081884526", otpMessage);
+        try {
+            EmailSender.sendEmail("patelarjun164@gmail.com", "Otp for Coin " + msg+" !!", otpMessage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
 //        System.out.println("otp :" + otp);
         // Get current system time
@@ -112,6 +118,7 @@ public class Main {
                             if (resultantCoin != null) {
                                 System.out.println("Coin added successfully.");
                                 SMSSender.sendSms("+919081884526", msg);
+                                EmailSender.sendEmail("patelarjun164@gmail.com", "Coin Added to your Database!", msg);
                             } else {
                                 System.out.println("Error: Could not add coin.");
                             }
@@ -244,6 +251,7 @@ public class Main {
                                 if (coin != null) {
                                     System.out.println("✅ Coin updated successfully");
                                     SMSSender.sendSms("+919081884526", message);
+                                    EmailSender.sendEmail("patelarjun164@gmail.com", "COin Updated from your Database!", message);
                                     System.out.println(message);
                                 } else {
                                     System.out.println("❌ Coin ID not found in databases");
@@ -288,6 +296,7 @@ public class Main {
                                 if (removedCoin != null) {
                                     System.out.println("✅ Coin removed successfully.");
                                     SMSSender.sendSms("+919081884526", message);
+                                    EmailSender.sendEmail("patelarjun164@gmail.com", "Coin Deleted from your Database!", message);
                                     System.out.println(message);
                                 } else {
                                     System.out.println("❌ Coin not found or couldn't be removed.");
